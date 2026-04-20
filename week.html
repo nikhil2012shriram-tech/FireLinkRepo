@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>This Week — FireLink</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>This Week's Focus</h1>
+      <p class="tagline">Your top priorities right now</p>
+    </header>
+
+    <main>
+      <div class="readiness-section">
+        <div id="readinessPercent" class="readiness-percent">0%</div>
+        <div class="readiness-label">Overall Readiness</div>
+      </div>
+
+      <div class="seasonal-card">
+        <p>🔥 Fire Season Outlook</p>
+        <div class="seasonal-highlight">Peak season begins in ~6 weeks</div>
+        <p style="margin-top: 8px; font-size: 12px;">Act now before conditions get severe.</p>
+      </div>
+
+      <div class="alert-card">
+        <h3>⚠ Red Flag Warning</h3>
+        <p>Critical fire conditions expected Thursday. Review your evacuation plan.</p>
+      </div>
+
+      <div style="background: white; border-radius: 8px; box-shadow: var(--shadow);">
+        <div style="padding: 20px; border-bottom: 1px solid var(--border);">
+          <h3 style="margin-bottom: 16px;">Top 3 Actions This Week</h3>
+        </div>
+        <div id="weekTasksList"></div>
+      </div>
+
+      <button onclick="window.location.href='plan.html'" class="btn-primary" style="margin-top: 30px;">View Full Action Plan</button>
+      <button onclick="window.location.href='index.html'" class="btn-link" style="margin-top: 12px; display: block;">Start Over</button>
+    </main>
+
+    <footer>
+      <p>Updated based on your property info and completed actions.</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      const state = getState();
+
+      // Readiness percentage
+      const readiness = getReadinessPercentage(state.completedTasks);
+      document.getElementById('readinessPercent').textContent = readiness + '%';
+
+      // This week's tasks
+      const weekTasks = getThisWeeksTasks(state.completedTasks);
+      const weekTasksList = document.getElementById('weekTasksList');
+
+      if (weekTasks.length === 0) {
+        weekTasksList.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary);"><p>🎉 You\'ve completed all high-priority actions! Check the full plan for additional tasks.</p></div>';
+      } else {
+        weekTasksList.innerHTML = weekTasks.map((task, index) => `
+          <div style="padding: 16px 20px; border-bottom: ${index < weekTasks.length - 1 ? '1px solid var(--border)' : 'none'};">
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <div style="font-weight: 700; color: var(--primary); font-size: 20px; flex-shrink: 0;">${index + 1}</div>
+              <div>
+                <div style="font-weight: 600; margin-bottom: 4px;">${task.title}</div>
+                <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">${task.description}</div>
+                <div style="display: flex; gap: 8px;">
+                  <span class="badge badge-impact-${task.impact.toLowerCase()}">${task.impact} Impact</span>
+                  <span class="badge badge-effort-${task.effort.toLowerCase().replace(' ', '-')}">${task.effort}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FireLink — Wildfire Readiness</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>FireLink</h1>
+      <p class="tagline">Wildfire Readiness Made Simple</p>
+    </header>
+
+    <main>
+      <form id="propertyForm">
+        <div class="form-group">
+          <label for="zip">ZIP Code</label>
+          <input type="text" id="zip" name="zip" placeholder="e.g., 90210" required>
+        </div>
+
+        <div class="form-group">
+          <label for="homeType">Home Type</label>
+          <select id="homeType" name="homeType" required>
+            <option value="single-family">Single Family</option>
+            <option value="townhome">Townhome</option>
+            <option value="multi-family">Multi-Family</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="roofMaterial">Roof Material</label>
+          <select id="roofMaterial" name="roofMaterial" required>
+            <option value="metal">Metal</option>
+            <option value="tile">Tile</option>
+            <option value="asphalt">Asphalt Shingle</option>
+            <option value="wood-shake">Wood Shake</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="vegetation">Surrounding Vegetation</label>
+          <select id="vegetation" name="vegetation" required>
+            <option value="sparse">Sparse (low trees/shrubs)</option>
+            <option value="moderate">Moderate (some trees/shrubs)</option>
+            <option value="heavy">Heavy (dense trees/shrubs)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="defensibleSpace">Defensible Space (0–5 ft from home)</label>
+          <select id="defensibleSpace" name="defensibleSpace" required>
+            <option value="clear">Clear (no dead plants)</option>
+            <option value="partial">Partial (some debris)</option>
+            <option value="cluttered">Cluttered (much dead material)</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn-primary">Calculate My Risk</button>
+      </form>
+    </main>
+
+    <footer>
+      <p>FireLink v0.1 — Learn your wildfire risk and take action.</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    document.getElementById('propertyForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const state = getState();
+      state.property = {
+        zip: document.getElementById('zip').value,
+        homeType: document.getElementById('homeType').value,
+        roofMaterial: document.getElementById('roofMaterial').value,
+        vegetation: document.getElementById('vegetation').value,
+        defensibleSpace: document.getElementById('defensibleSpace').value
+      };
+      setState(state);
+
+      window.location.href = 'dashboard.html';
+    });
+
+    // Load saved state into form
+    window.addEventListener('load', () => {
+      const state = getState();
+      if (state.property.zip) {
+        document.getElementById('zip').value = state.property.zip;
+        document.getElementById('homeType').value = state.property.homeType;
+        document.getElementById('roofMaterial').value = state.property.roofMaterial;
+        document.getElementById('vegetation').value = state.property.vegetation;
+        document.getElementById('defensibleSpace').value = state.property.defensibleSpace;
+      }
+    });
+  </script>
+</body>
+</html>
