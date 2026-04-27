@@ -41,6 +41,17 @@
         </div>
 
         <div class="form-group">
+          <label for="sidingMaterial">Siding Material</label>
+          <select id="sidingMaterial" name="sidingMaterial" required>
+            <option value="fiber-cement">Fiber Cement (fire-resistant)</option>
+            <option value="stucco">Stucco</option>
+            <option value="vinyl">Vinyl</option>
+            <option value="wood">Wood</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
           <label for="vegetation">Surrounding Vegetation</label>
           <select id="vegetation" name="vegetation" required>
             <option value="sparse">Sparse (low trees/shrubs)</option>
@@ -55,6 +66,41 @@
             <option value="clear">Clear (no dead plants)</option>
             <option value="partial">Partial (some debris)</option>
             <option value="cluttered">Cluttered (much dead material)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="slope">Property Slope</label>
+          <select id="slope" name="slope" required>
+            <option value="flat">Flat (0-10%)</option>
+            <option value="moderate">Moderate (10-30%)</option>
+            <option value="steep">Steep (30%+)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="distanceToWildland">Distance to Wildland/Forest</label>
+          <select id="distanceToWildland" name="distanceToWildland" required>
+            <option value="far">Far (1+ mile)</option>
+            <option value="moderate">Moderate (0.25-1 mile)</option>
+            <option value="close">Close (less than 0.25 mile)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="ventType">Vent Type</label>
+          <select id="ventType" name="ventType" required>
+            <option value="ember-resistant">Ember-Resistant (1/8" mesh)</option>
+            <option value="standard">Standard Vents</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="deckMaterial">Deck Material</label>
+          <select id="deckMaterial" name="deckMaterial" required>
+            <option value="none">No Deck</option>
+            <option value="composite">Composite/Non-combustible</option>
+            <option value="wood">Wood</option>
           </select>
         </div>
 
@@ -77,8 +123,13 @@
         zip: document.getElementById('zip').value,
         homeType: document.getElementById('homeType').value,
         roofMaterial: document.getElementById('roofMaterial').value,
+        sidingMaterial: document.getElementById('sidingMaterial').value,
         vegetation: document.getElementById('vegetation').value,
-        defensibleSpace: document.getElementById('defensibleSpace').value
+        defensibleSpace: document.getElementById('defensibleSpace').value,
+        slope: document.getElementById('slope').value,
+        distanceToWildland: document.getElementById('distanceToWildland').value,
+        ventType: document.getElementById('ventType').value,
+        deckMaterial: document.getElementById('deckMaterial').value
       };
       setState(state);
 
@@ -92,8 +143,13 @@
         document.getElementById('zip').value = state.property.zip;
         document.getElementById('homeType').value = state.property.homeType;
         document.getElementById('roofMaterial').value = state.property.roofMaterial;
+        document.getElementById('sidingMaterial').value = state.property.sidingMaterial;
         document.getElementById('vegetation').value = state.property.vegetation;
         document.getElementById('defensibleSpace').value = state.property.defensibleSpace;
+        document.getElementById('slope').value = state.property.slope;
+        document.getElementById('distanceToWildland').value = state.property.distanceToWildland;
+        document.getElementById('ventType').value = state.property.ventType;
+        document.getElementById('deckMaterial').value = state.property.deckMaterial;
       }
     });
   </script>

@@ -14,10 +14,27 @@
     </header>
 
     <main>
-      <div class="risk-score">
-        <div id="scoreGauge" class="score-gauge"></div>
-        <div id="scoreTier" class="score-label"></div>
-        <p style="color: var(--text-secondary); margin-top: 12px; font-size: 14px;">Out of 100</p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: var(--shadow);">
+          <h3 style="font-size: 18px; margin-bottom: 16px; color: #FF6B6B; text-align: center;">Exposure Risk</h3>
+          <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+            <div id="exposureGauge" style="width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: bold; color: white;"></div>
+          </div>
+          <div id="exposureTier" style="font-size: 16px; font-weight: 600; text-align: center; margin-bottom: 12px;"></div>
+          <p id="locationName" style="font-size: 15px; color: #333; text-align: center; font-weight: 600; margin-bottom: 12px;"></p>
+          <p style="font-size: 14px; color: var(--text-secondary); text-align: center;">Location-based factors</p>
+          <p style="font-size: 13px; color: var(--text-secondary); text-align: center; margin-top: 8px; font-style: italic;">Mostly uncontrollable</p>
+        </div>
+
+        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: var(--shadow);">
+          <h3 style="font-size: 18px; margin-bottom: 16px; color: #4A90E2; text-align: center;">Vulnerability Risk</h3>
+          <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+            <div id="vulnerabilityGauge" style="width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: bold; color: white;"></div>
+          </div>
+          <div id="vulnerabilityTier" style="font-size: 16px; font-weight: 600; text-align: center; margin-bottom: 12px;"></div>
+          <p style="font-size: 14px; color: var(--text-secondary); text-align: center; margin-top: 12px;">Property-based factors</p>
+          <p style="font-size: 13px; color: var(--text-secondary); text-align: center; margin-top: 8px; font-style: italic;">You can improve this!</p>
+        </div>
       </div>
 
       <div class="risk-factors">
@@ -26,13 +43,13 @@
       </div>
 
       <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: var(--shadow); margin-bottom: 30px;">
-        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;">
-          <strong>Community Context:</strong> Homes like yours in this region experience wildfire exposure at rates 2–3× the national average.
+        <p id="riskExplanation" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0;">
         </p>
       </div>
 
       <button onclick="window.location.href='plan.html'" class="btn-primary">See My Action Plan</button>
       <button onclick="window.location.href='index.html'" class="btn-secondary" style="margin-top: 12px;">Edit Property Info</button>
+      <button onclick="restartAssessment()" style="margin-top: 20px; padding: 8px 16px; background: transparent; color: #999; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 13px;">↻ Start Over</button>
     </main>
 
     <footer>
@@ -42,29 +59,83 @@
 
   <script src="app.js"></script>
   <script>
-    window.addEventListener('load', () => {
+    window.addEventListener('load', async () => {
       const state = getState();
-      const score = calculateRiskScore(state.property);
-      const tier = getRiskTier(score);
-      const factors = getTopRiskFactors(state.property, score);
+      
+      document.getElementById('exposureGauge').textContent = '...';
+      document.getElementById('vulnerabilityGauge').textContent = '...';
+      
+      console.log('Property ZIP:', state.property.zip);
+      const exposureData = await calculateExposureRisk(state.property);
+      const exposureRisk = exposureData.score;
+      console.log('Exposure Risk:', exposureRisk);
+      const vulnerabilityRisk = calculateVulnerabilityRisk(state.property);
+      console.log('Vulnerability Risk:', vulnerabilityRisk);
+      const factors = getTopRiskFactors(state.property, exposureRisk);
 
-      // Risk score gauge
-      const gauge = document.getElementById('scoreGauge');
-      gauge.style.background = tier.color;
-      gauge.textContent = score;
+      // Exposure risk gauge
+      const exposureGauge = document.getElementById('exposureGauge');
+      const exposureTier = getRiskTier(exposureRisk);
+      exposureGauge.style.background = exposureTier.color;
+      exposureGauge.textContent = exposureRisk;
+      
+      // Exposure tier label
+      document.getElementById('exposureTier').textContent = exposureTier.label + ' Risk';
+      document.getElementById('exposureTier').style.color = exposureTier.color;
 
-      // Risk tier label
-      document.getElementById('scoreTier').textContent = tier.label + ' Risk';
-      document.getElementById('scoreTier').style.color = tier.color;
+      // Display location name
+      const locationName = document.getElementById('locationName');
+      if (exposureData.locationData && exposureData.locationData.coordinates) {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${exposureData.locationData.coordinates.lat}&lon=${exposureData.locationData.coordinates.lon}&format=json`, {
+          headers: { 'User-Agent': 'FireLink-MVP/1.0' }
+        });
+        const geoData = await response.json();
+        const city = geoData.address.city || geoData.address.town || geoData.address.village || geoData.address.county || '';
+        const state = geoData.address.state || '';
+        locationName.textContent = city && state ? `${city}, ${state}` : `ZIP ${state.property.zip}`;
+      } else {
+        locationName.textContent = `ZIP ${state.property.zip}`;
+      }
 
-      // Risk factors
+      // Vulnerability risk gauge
+      const vulnerabilityGauge = document.getElementById('vulnerabilityGauge');
+      const vulnerabilityTier = getRiskTier(vulnerabilityRisk);
+      vulnerabilityGauge.style.background = vulnerabilityTier.color;
+      vulnerabilityGauge.textContent = vulnerabilityRisk;
+      
+      // Vulnerability tier label
+      document.getElementById('vulnerabilityTier').textContent = vulnerabilityTier.label + ' Risk';
+      document.getElementById('vulnerabilityTier').style.color = vulnerabilityTier.color;
+
+      // Risk explanation based on the combination
+      const explanation = document.getElementById('riskExplanation');
+      if (exposureRisk > 70 && vulnerabilityRisk > 70) {
+        explanation.innerHTML = '<strong>Critical Situation:</strong> Your location has high wildfire exposure AND your home has significant vulnerabilities. Immediate mitigation actions are strongly recommended.';
+      } else if (exposureRisk > 70 && vulnerabilityRisk <= 40) {
+        explanation.innerHTML = '<strong>Good Defense:</strong> While your location has high wildfire exposure, your home is well-protected. Continue maintaining your defenses and monitor fire weather alerts.';
+      } else if (exposureRisk <= 40 && vulnerabilityRisk > 70) {
+        explanation.innerHTML = '<strong>Improve Your Home:</strong> Your location has relatively low wildfire exposure, but your home has vulnerabilities. Focus on home hardening to reduce risk further.';
+      } else if (exposureRisk <= 40 && vulnerabilityRisk <= 40) {
+        explanation.innerHTML = '<strong>Well Positioned:</strong> Your location has low wildfire exposure and your home is well-protected. Maintain your current preparedness level.';
+      } else {
+        explanation.innerHTML = '<strong>Moderate Risk:</strong> You have a balanced risk profile. Review the factors below and prioritize the highest-impact mitigation actions.';
+      }
+
+      // Risk factors with type badges
       const factorsList = document.getElementById('factorsList');
-      factorsList.innerHTML = factors.map(f => `
-        <div class="factor">
-          <div class="factor-name">${f.name}</div>
-          <div class="factor-contribution">Accounts for ~${f.contribution}% of your risk</div>
-        </div>
-      `).join('');
+      factorsList.innerHTML = factors.map(f => {
+        const badgeColor = f.type === 'exposure' ? '#FF6B6B' : '#4A90E2';
+        const badgeText = f.type === 'exposure' ? 'EXPOSURE' : 'VULNERABILITY';
+        return `
+          <div class="factor">
+            <div class="factor-name">
+              <span style="display: inline-block; background: ${badgeColor}; color: white; font-size: 10px; padding: 2px 6px; border-radius: 3px; margin-right: 8px; font-weight: bold;">${badgeText}</span>
+              ${f.name}
+            </div>
+            <div class="factor-contribution">Contributes ~${f.contribution} points to your risk</div>
+          </div>
+        `;
+      }).join('');
 
       // If no factors (all clear), show a positive message
       if (factors.length === 0) {

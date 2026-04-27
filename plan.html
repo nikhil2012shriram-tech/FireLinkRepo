@@ -14,6 +14,11 @@
     </header>
 
     <main>
+      <div style="background: white; padding: 24px; border-radius: 8px; box-shadow: var(--shadow); margin-bottom: 30px;">
+        <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--primary);">Your Personalized Action Plan</h3>
+        <p id="planSummary" style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 0;"></p>
+      </div>
+
       <div class="task-list">
         <div class="progress-bar">
           <div id="progressFill" class="progress-fill" style="width: 0%"></div>
@@ -25,6 +30,7 @@
 
       <button onclick="window.location.href='week.html'" class="btn-primary" style="margin-top: 30px;">This Week's Focus</button>
       <button onclick="window.location.href='dashboard.html'" class="btn-secondary" style="margin-top: 12px;">Back to Risk Score</button>
+      <button onclick="restartAssessment()" style="margin-top: 20px; padding: 8px 16px; background: transparent; color: #999; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 13px;">↻ Start Over</button>
     </main>
 
     <footer>
@@ -45,22 +51,63 @@
       document.getElementById('progressText').textContent = `${completed} of ${total} actions complete`;
     }
 
-    function renderTasks() {
+    async function renderTasks() {
       const state = getState();
       const tasks = getPrioritizedTasks();
+      
+      // Get exposure and vulnerability risk for summary
+      const exposureData = await calculateExposureRisk(state.property);
+      const exposureRisk = exposureData.score;
+      const vulnerabilityRisk = calculateVulnerabilityRisk(state.property);
+      
+      // Display personalized summary
+      const summary = getActionPlanSummary(state.property, exposureRisk, vulnerabilityRisk);
+      document.getElementById('planSummary').textContent = summary;
 
       const tasksList = document.getElementById('tasksList');
-      tasksList.innerHTML = tasks.map(task => `
-        <div class="task-item">
-          <input type="checkbox" class="task-checkbox" data-task-id="${task.id}" ${state.completedTasks.includes(task.id) ? 'checked' : ''}>
-          <div class="task-content">
-            <div class="task-title">${task.title}</div>
-            <div class="task-description">${task.description}</div>
-            <div class="task-badges">
-              <span class="badge badge-impact-${task.impact.toLowerCase()}">${task.impact} Impact</span>
-              <span class="badge badge-effort-${task.effort.toLowerCase().replace(' ', '-')}">${task.effort}</span>
-            </div>
-          </div>
+      
+      // Group tasks by category
+      const categories = {};
+      tasks.forEach(task => {
+        if (!categories[task.category]) {
+          categories[task.category] = [];
+        }
+        categories[task.category].push(task);
+      });
+      
+      // Render tasks grouped by category
+      tasksList.innerHTML = Object.entries(categories).map(([category, categoryTasks]) => `
+        <div style="margin-bottom: 30px;">
+          <h3 style="font-size: 16px; color: var(--primary); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--border);">
+            ${category}
+          </h3>
+          ${categoryTasks.map(task => {
+            const priorityColor = {
+              'Critical': '#F44336',
+              'High': '#FF9800',
+              'Medium': '#FFC107',
+              'Low': '#4CAF50'
+            }[task.priority] || '#666';
+            
+            return `
+              <div class="task-item" style="margin-bottom: 20px; border-left: 4px solid ${priorityColor};">
+                <input type="checkbox" class="task-checkbox" data-task-id="${task.id}" ${state.completedTasks.includes(task.id) ? 'checked' : ''}>
+                <div class="task-content">
+                  <div class="task-title" style="font-size: 15px; font-weight: 600; margin-bottom: 6px;">${task.title}</div>
+                  <div class="task-description" style="margin-bottom: 8px;">${task.description}</div>
+                  <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; font-style: italic; color: #555;">
+                    <strong>Why this matters:</strong> ${task.why}
+                  </div>
+                  <div class="task-badges">
+                    <span class="badge" style="background: ${priorityColor}; color: white;">${task.priority} Priority</span>
+                    <span class="badge badge-effort-${task.effort.toLowerCase().replace(/\s+/g, '-')}">${task.effort}</span>
+                    <span class="badge" style="background: #e3f2fd; color: #1976d2;">${task.cost}</span>
+                    <span class="badge" style="background: #f3e5f5; color: #7b1fa2;">⏱ ${task.timeline}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
         </div>
       `).join('');
 
