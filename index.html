@@ -16,8 +16,10 @@
     <main>
       <form id="propertyForm" class="form-grid">
         <div class="form-group full-width">
-          <label for="zip">ZIP Code</label>
+          <label for="zip">ZIP Code <span style="color: var(--danger);">*</span></label>
           <input type="text" id="zip" name="zip" placeholder="e.g., 90210" required>
+          <p class="field-note">* For the MVP, ZIP codes are concentrated in Southern California.</p>
+          <p id="zipError" class="field-error" style="display:none;">Error: ZIP code not supported yet.</p>
         </div>
 
         <div class="form-group full-width">
@@ -115,25 +117,59 @@
 
   <script src="app.js"></script>
   <script>
-    document.getElementById('propertyForm').addEventListener('submit', (e) => {
+    document.getElementById('propertyForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const state = getState();
-      state.property = {
-        zip: document.getElementById('zip').value,
-        homeType: document.getElementById('homeType').value,
-        roofMaterial: document.getElementById('roofMaterial').value,
-        sidingMaterial: document.getElementById('sidingMaterial').value,
-        vegetation: document.getElementById('vegetation').value,
-        defensibleSpace: document.getElementById('defensibleSpace').value,
-        slope: document.getElementById('slope').value,
-        distanceToWildland: document.getElementById('distanceToWildland').value,
-        ventType: document.getElementById('ventType').value,
-        deckMaterial: document.getElementById('deckMaterial').value
-      };
-      setState(state);
+      const submitButton = e.target.querySelector('button[type="submit"]');
+      const zipInput = document.getElementById('zip');
+      const zipError = document.getElementById('zipError');
+      const originalButtonText = submitButton.textContent;
 
-      window.location.href = 'dashboard.html';
+      // Hide error message initially
+      zipError.style.display = 'none';
+
+      try {
+        // Show loading state
+        submitButton.disabled = true;
+        submitButton.textContent = 'Checking...';
+
+        // Validate ZIP code
+        const zipCode = zipInput.value;
+        const response = await fetch(`http://localhost:3000/api/risk/exposure?zip=${zipCode}`);
+        const data = await response.json();
+
+        // Check if ZIP is supported
+        if (!data.supported) {
+          zipError.style.display = 'block';
+          submitButton.disabled = false;
+          submitButton.textContent = originalButtonText;
+          return;
+        }
+
+        // ZIP is supported, proceed with form submission
+        const state = getState();
+        state.property = {
+          zip: zipInput.value,
+          homeType: document.getElementById('homeType').value,
+          roofMaterial: document.getElementById('roofMaterial').value,
+          sidingMaterial: document.getElementById('sidingMaterial').value,
+          vegetation: document.getElementById('vegetation').value,
+          defensibleSpace: document.getElementById('defensibleSpace').value,
+          slope: document.getElementById('slope').value,
+          distanceToWildland: document.getElementById('distanceToWildland').value,
+          ventType: document.getElementById('ventType').value,
+          deckMaterial: document.getElementById('deckMaterial').value
+        };
+        setState(state);
+
+        window.location.href = 'dashboard.html';
+      } catch (error) {
+        console.error('Error validating ZIP code:', error);
+        zipError.textContent = 'Error: Could not validate ZIP code. Please try again.';
+        zipError.style.display = 'block';
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+      }
     });
 
     // Load saved state into form

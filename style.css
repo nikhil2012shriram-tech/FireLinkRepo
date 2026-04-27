@@ -67,6 +67,19 @@ form {
   margin-bottom: 24px;
 }
 
+.field-note {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+.field-error {
+  font-size: 13px;
+  color: var(--danger);
+  margin-top: 6px;
+  font-weight: 600;
+}
+
 label {
   display: block;
   font-weight: 600;

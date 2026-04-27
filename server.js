@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
-const { getZipRisk } = require('./zipRiskData');
+const { getZipRisk, ZIP_RISK_DATABASE } = require('./zipRiskData');
 
 const app = express();
 const PORT = 3000;
@@ -74,20 +74,23 @@ app.get('/api/risk/exposure', async (req, res) => {
   try {
     const coords = await geocodeZIP(zip);
     const riskScore = getWildfireHazardPotential(zip);
+    const isSupported = ZIP_RISK_DATABASE[zip] !== undefined;
 
     res.json({
       baseRisk: riskScore,
       source: 'Wildfire_Hazard_Database',
       coordinates: coords || null,
       cached: cache.has(`whp_${zip}`),
-      zipCode: zip
+      zipCode: zip,
+      supported: isSupported
     });
   } catch (error) {
     console.error('API error:', error);
     res.status(500).json({
       error: 'Internal server error',
       baseRisk: 50,
-      source: 'fallback'
+      source: 'fallback',
+      supported: false
     });
   }
 });
