@@ -560,3 +560,12 @@ function getThisWeeksTasks(completedTaskIds) {
   const uncompleted = tasks.filter(t => !completedTaskIds.includes(t.id));
   return uncompleted.slice(0, 3);
 }
+
+function getEstimatedCostRange(costLevel) {
+  const costRanges = {
+    '$': '$200 - $500',
+    '$$': '$800 - $3,000',
+    '$$$': '$5,000 - $15,000+'
+  };
+  return costRanges[costLevel] || 'Variable';
+}

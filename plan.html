@@ -13,24 +13,32 @@
       <p class="tagline">Prioritized mitigation steps for your home</p>
     </header>
 
-    <main>
-      <div style="background: white; padding: 24px; border-radius: 8px; box-shadow: var(--shadow); margin-bottom: 30px;">
-        <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--primary);">Your Personalized Action Plan</h3>
-        <p id="planSummary" style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 0;"></p>
-      </div>
-
-      <div class="task-list">
-        <div class="progress-bar">
-          <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+    <main class="plan-layout">
+      <div class="plan-sidebar">
+        <div class="summary-card">
+          <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--primary);">Your Personalized Action Plan</h3>
+          <div id="planStatsContainer"></div>
+          <div id="summaryDetails" class="summary-details"></div>
         </div>
-        <div id="tasksList"></div>
+
+        <div class="task-list" style="margin-top: 20px;">
+          <div class="progress-bar">
+            <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <p id="progressText" style="text-align: center; color: var(--text-secondary); margin-top: 16px; font-size: 14px;"></p>
+
+        <button onclick="window.location.href='week.html'" class="btn-primary" style="margin-top: 20px;">This Week's Focus</button>
+        <button onclick="window.location.href='dashboard.html'" class="btn-secondary" style="margin-top: 12px;">Back to Risk Score</button>
+        <button onclick="restartAssessment()" style="margin-top: 16px; padding: 8px 16px; background: transparent; color: #999; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 13px; width: 100%; text-align: center;">↻ Start Over</button>
       </div>
 
-      <p id="progressText" style="text-align: center; color: var(--text-secondary); margin-top: 20px; font-size: 14px;"></p>
-
-      <button onclick="window.location.href='week.html'" class="btn-primary" style="margin-top: 30px;">This Week's Focus</button>
-      <button onclick="window.location.href='dashboard.html'" class="btn-secondary" style="margin-top: 12px;">Back to Risk Score</button>
-      <button onclick="restartAssessment()" style="margin-top: 20px; padding: 8px 16px; background: transparent; color: #999; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 13px;">↻ Start Over</button>
+      <div class="plan-content">
+        <div class="task-list">
+          <div id="tasksList"></div>
+        </div>
+      </div>
     </main>
 
     <footer>
@@ -54,18 +62,29 @@
     async function renderTasks() {
       const state = getState();
       const tasks = getPrioritizedTasks();
-      
+
       // Get exposure and vulnerability risk for summary
       const exposureData = await calculateExposureRisk(state.property);
       const exposureRisk = exposureData.score;
       const vulnerabilityRisk = calculateVulnerabilityRisk(state.property);
-      
-      // Display personalized summary
+
+      // Display personalized summary with compact stats
       const summary = getActionPlanSummary(state.property, exposureRisk, vulnerabilityRisk);
-      document.getElementById('planSummary').textContent = summary;
+      const priorityCounts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+      tasks.forEach(task => priorityCounts[task.priority]++);
+
+      const statsHtml = `
+        <div class="plan-stats">
+          ${priorityCounts.Critical > 0 ? `<div class="stat-item critical">${priorityCounts.Critical} Critical</div>` : ''}
+          ${priorityCounts.High > 0 ? `<div class="stat-item high">${priorityCounts.High} High</div>` : ''}
+          ${priorityCounts.Medium > 0 ? `<div class="stat-item medium">${priorityCounts.Medium} Medium</div>` : ''}
+        </div>
+      `;
+      document.getElementById('planStatsContainer').innerHTML = statsHtml;
+      document.getElementById('summaryDetails').textContent = summary;
 
       const tasksList = document.getElementById('tasksList');
-      
+
       // Group tasks by category
       const categories = {};
       tasks.forEach(task => {
@@ -74,55 +93,100 @@
         }
         categories[task.category].push(task);
       });
-      
+
       // Render tasks grouped by category
       tasksList.innerHTML = Object.entries(categories).map(([category, categoryTasks]) => `
-        <div style="margin-bottom: 30px;">
-          <h3 style="font-size: 16px; color: var(--primary); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--border);">
-            ${category}
-          </h3>
-          ${categoryTasks.map(task => {
+        <div class="category-section">
+          <div class="category-header">
+            <h3 style="font-size: 16px; color: var(--primary);">${category}</h3>
+            <span class="category-count">${categoryTasks.length}</span>
+            <button class="category-chevron" type="button">›</button>
+          </div>
+          <div class="category-tasks">
+            ${categoryTasks.map(task => {
             const priorityColor = {
               'Critical': '#F44336',
               'High': '#FF9800',
               'Medium': '#FFC107',
               'Low': '#4CAF50'
             }[task.priority] || '#666';
-            
+
+            const isCompleted = state.completedTasks.includes(task.id);
+            const isCritical = task.priority === 'Critical';
+
             return `
-              <div class="task-item" style="margin-bottom: 20px; border-left: 4px solid ${priorityColor};">
-                <input type="checkbox" class="task-checkbox" data-task-id="${task.id}" ${state.completedTasks.includes(task.id) ? 'checked' : ''}>
+              <div class="task-item ${isCompleted ? 'completed' : ''} ${isCritical ? 'expanded' : ''}" style="border-left: 4px solid ${priorityColor};" data-task-id="${task.id}">
+                <input type="checkbox" class="task-checkbox" data-task-id="${task.id}" ${isCompleted ? 'checked' : ''}>
                 <div class="task-content">
-                  <div class="task-title" style="font-size: 15px; font-weight: 600; margin-bottom: 6px;">${task.title}</div>
-                  <div class="task-description" style="margin-bottom: 8px;">${task.description}</div>
-                  <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; font-style: italic; color: #555;">
-                    <strong>Why this matters:</strong> ${task.why}
+                  <div class="task-summary" data-expandable="true">
+                    <div class="task-title-with-priority">
+                      <div class="task-title" style="font-size: 15px; font-weight: 600;">${task.title}</div>
+                      <span class="badge" style="background: ${priorityColor}; color: white; margin: 0; flex-shrink: 0;">${task.priority}</span>
+                    </div>
+                    <span class="badge badge-effort-${task.effort.toLowerCase().replace(/\s+/g, '-')}" style="margin: 0; flex-shrink: 0;">${task.effort}</span>
+                    <button class="task-toggle" type="button">›</button>
                   </div>
-                  <div class="task-badges">
-                    <span class="badge" style="background: ${priorityColor}; color: white;">${task.priority} Priority</span>
-                    <span class="badge badge-effort-${task.effort.toLowerCase().replace(/\s+/g, '-')}">${task.effort}</span>
-                    <span class="badge" style="background: #e3f2fd; color: #1976d2;">${task.cost}</span>
-                    <span class="badge" style="background: #f3e5f5; color: #7b1fa2;">⏱ ${task.timeline}</span>
+
+                  <div class="task-details">
+                    <div class="task-description" style="margin-bottom: 8px;">${task.description}</div>
+                    <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; font-style: italic; color: #555;">
+                      <strong>Why this matters:</strong> ${task.why}
+                    </div>
+                    <div class="task-badges">
+                      <span class="badge cost-badge" style="background: #e3f2fd; color: #1976d2;" data-cost="${task.cost}">${task.cost}</span>
+                      <span class="badge" style="background: #f3e5f5; color: #7b1fa2;">⏱ ${task.timeline}</span>
+                    </div>
                   </div>
                 </div>
               </div>
             `;
           }).join('')}
+          </div>
         </div>
       `).join('');
 
-      // Add change listeners
+      // Set cost badge tooltips
+      document.querySelectorAll('.cost-badge').forEach(badge => {
+        const costLevel = badge.dataset.cost;
+        const estimatedRange = getEstimatedCostRange(costLevel);
+        badge.setAttribute('data-tooltip', `Estimated: ${estimatedRange}`);
+      });
+
+      // Add toggle listeners for category collapse/expand
+      document.querySelectorAll('.category-header').forEach(header => {
+        header.addEventListener('click', (e) => {
+          // Prevent toggling if clicking checkbox
+          if (e.target.closest('.task-checkbox')) return;
+          const categorySection = header.closest('.category-section');
+          categorySection.classList.toggle('open');
+        });
+      });
+
+      // Add toggle listeners for task expansion
+      document.querySelectorAll('.task-summary').forEach(summary => {
+        summary.addEventListener('click', (e) => {
+          // Don't toggle if clicking the checkbox
+          if (e.target.closest('.task-checkbox')) return;
+          const taskItem = summary.closest('.task-item');
+          taskItem.classList.toggle('expanded');
+        });
+      });
+
+      // Add change listeners for checkboxes
       document.querySelectorAll('.task-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', (e) => {
           const state = getState();
           const taskId = parseInt(e.target.dataset.taskId);
+          const taskItem = document.querySelector(`[data-task-id="${taskId}"]`);
 
           if (e.target.checked) {
             if (!state.completedTasks.includes(taskId)) {
               state.completedTasks.push(taskId);
             }
+            taskItem.classList.add('completed');
           } else {
             state.completedTasks = state.completedTasks.filter(id => id !== taskId);
+            taskItem.classList.remove('completed');
           }
 
           setState(state);
