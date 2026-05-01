@@ -349,40 +349,6 @@ button {
   color: var(--danger);
 }
 
-.cost-badge {
-  cursor: help;
-  position: relative;
-  padding: 6px 10px !important;
-}
-
-.cost-badge:hover::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 125%;
-  left: 0;
-  background: #333;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  white-space: nowrap;
-  z-index: 10000;
-  pointer-events: none;
-  font-weight: 600;
-  font-style: normal;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.cost-badge:hover::before {
-  content: '';
-  position: absolute;
-  bottom: 115%;
-  left: 8px;
-  border: 5px solid transparent;
-  border-top-color: #333;
-  z-index: 10000;
-  pointer-events: none;
-}
 
 /* Ensure task containers don't clip tooltips */
 .task-item {

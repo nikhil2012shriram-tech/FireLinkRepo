@@ -133,7 +133,7 @@
                       <strong>Why this matters:</strong> ${task.why}
                     </div>
                     <div class="task-badges">
-                      <span class="badge cost-badge" style="background: #e3f2fd; color: #1976d2;" data-cost="${task.cost}">${task.cost}</span>
+                      <span class="badge" style="background: #e3f2fd; color: #1976d2;">Estimated: ${getEstimatedCostRange(task.cost)}</span>
                       <span class="badge" style="background: #f3e5f5; color: #7b1fa2;">⏱ ${task.timeline}</span>
                     </div>
                   </div>
@@ -144,13 +144,6 @@
           </div>
         </div>
       `).join('');
-
-      // Set cost badge tooltips
-      document.querySelectorAll('.cost-badge').forEach(badge => {
-        const costLevel = badge.dataset.cost;
-        const estimatedRange = getEstimatedCostRange(costLevel);
-        badge.setAttribute('data-tooltip', `Estimated: ${estimatedRange}`);
-      });
 
       // Add toggle listeners for category collapse/expand
       document.querySelectorAll('.category-header').forEach(header => {
