@@ -135,7 +135,7 @@
 
         // Validate ZIP code
         const zipCode = zipInput.value;
-        const response = await fetch(`http://localhost:3000/api/risk/exposure?zip=${zipCode}`);
+        const response = await fetch(`/api/risk/exposure?zip=${zipCode}`);
         const data = await response.json();
 
         // Check if ZIP is supported

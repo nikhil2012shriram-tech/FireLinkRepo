@@ -1,14 +1,5 @@
-const express = require('express');
-const cors = require('cors');
 const axios = require('axios');
-const { getZipRisk, ZIP_RISK_DATABASE } = require('./zipRiskData');
-
-const app = express();
-const PORT = 3000;
-
-app.use(cors());
-app.use(express.json());
-app.use(express.static('.'));
+const { getZipRisk, ZIP_RISK_DATABASE } = require('../../zipRiskData');
 
 const cache = new Map();
 const CACHE_DURATION = 24 * 60 * 60 * 1000;
@@ -64,7 +55,7 @@ function getWildfireHazardPotential(zipCode) {
   return riskScore;
 }
 
-app.get('/api/risk/exposure', async (req, res) => {
+export default async function handler(req, res) {
   const { zip } = req.query;
 
   if (!zip) {
@@ -93,13 +84,4 @@ app.get('/api/risk/exposure', async (req, res) => {
       supported: false
     });
   }
-});
-
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', cache_size: cache.size });
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`FireLink API server running on http://0.0.0.0:${PORT}`);
-  console.log(`Health check: http://0.0.0.0:${PORT}/api/health`);
-});
+}
