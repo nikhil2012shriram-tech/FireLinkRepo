@@ -39,7 +39,7 @@ function restartAssessment() {
 
 async function fetchBaseLocationRisk(zipCode) {
   try {
-    const response = await fetch(`http://localhost:3000/api/risk/exposure?zip=${zipCode}`);
+    const response = await fetch(`/api/risk/exposure?zip=${zipCode}`);
     const data = await response.json();
     console.log(`Base location risk for ZIP ${zipCode}:`, data.baseRisk, 'Source:', data.source);
     return {
