@@ -91,8 +91,8 @@
         });
         const geoData = await response.json();
         const city = geoData.address.city || geoData.address.town || geoData.address.village || geoData.address.county || '';
-        const state = geoData.address.state || '';
-        locationName.textContent = city && state ? `${city}, ${state}` : `ZIP ${state.property.zip}`;
+        const stateName = geoData.address.state || '';
+        locationName.textContent = city && stateName ? `${city}, ${stateName}` : `ZIP ${state.property.zip}`;
       } else {
         locationName.textContent = `ZIP ${state.property.zip}`;
       }

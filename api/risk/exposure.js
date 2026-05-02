@@ -55,7 +55,7 @@ function getWildfireHazardPotential(zipCode) {
   return riskScore;
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const { zip } = req.query;
 
   if (!zip) {
